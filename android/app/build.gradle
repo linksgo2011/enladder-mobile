@@ -30,21 +30,18 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("../my-release-key.jks")  // Keystore 文件路径
-            storePassword "Ss123456!"  // 密码
-            keyAlias "my-key-alias"                 // 别名
-            keyPassword "Ss123456!"         // 密钥密码
+            storeFile file("../my-release-key.jks") 
+            storePassword "Ss123456!" 
+            keyAlias "my-key-alias"                 
+            keyPassword "Ss123456!" 
         }
     }    
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            // signingConfig = signingConfigs.debug
             signingConfig signingConfigs.release
             minifyEnabled false    
-            shrinkResources false    // 可启用资源优化
+            shrinkResources false 
         }
     }
 }
