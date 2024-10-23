@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
               child: Image.network(
                 'https://app.enladder.com/${book['cover']}', // 使用完整的 URL
-                height: 180,
+                height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
@@ -205,21 +205,45 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _performSearch() {
-    String searchTerm = _searchController.text;
-    // 执行搜索操作
-    // 可能需要导航到搜索结果页面
+    String searchTerm = _searchController.text.trim();
+    if (searchTerm.isNotEmpty) {
+      // 过滤书籍列表
+      List<dynamic> searchResults = _books.where((book) {
+        return (book['title']?.toLowerCase().contains(searchTerm.toLowerCase()) ?? false) ||
+               (book['author']?.toLowerCase().contains(searchTerm.toLowerCase()) ?? false);
+      }).toList();
+
+      // 导航到搜索结果页面
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchResultsScreen(
+            searchTerm: searchTerm,
+            searchType: '书籍',
+            searchResults: searchResults, // 传递搜索结果
+          ),
+        ),
+      );
+    } else {
+      // 如果搜索框为空，可以选择不执行任何操作或显示提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请输入搜索关键词')),
+      );
+    }
   }
 }
 
-// 这是一个简单的搜索结果页面示例
+// 更新 SearchResultsScreen 以接收搜索结果
 class SearchResultsScreen extends StatelessWidget {
   final String searchTerm;
   final String searchType;
+  final List<dynamic> searchResults; // 新增搜索结果参数
 
   const SearchResultsScreen({
     Key? key,
     required this.searchTerm,
     required this.searchType,
+    required this.searchResults, // 新增搜索结果参数
   }) : super(key: key);
 
   @override
@@ -228,9 +252,27 @@ class SearchResultsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('$searchType 搜索结果'),
       ),
-      body: Center(
-        child: Text('搜索 "$searchTerm" 的 $searchType 结果'),
-      ),
+      body: searchResults.isEmpty
+          ? Center(child: Text('没找到与 "$searchTerm" 相关的结果'))
+          : ListView.builder(
+              itemCount: searchResults.length,
+              itemBuilder: (context, index) {
+                final book = searchResults[index];
+                return ListTile(
+                  title: Text(book['title'] ?? '未知书名'),
+                  subtitle: Text(book['author'] ?? '未知作者'),
+                  onTap: () {
+                    // 点击后导航到书籍详情页面
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookDetailScreen(book: book),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }

@@ -3,11 +3,14 @@ import 'package:vocsy_epub_viewer/epub_viewer.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../services/book_service.dart';
 
 class BookDetailScreen extends StatelessWidget {
   final dynamic book;
+  final BookService _bookService = BookService();
 
-  const BookDetailScreen({Key? key, required this.book}) : super(key: key);
+   BookDetailScreen({Key? key, required this.book}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -130,39 +133,67 @@ class BookDetailScreen extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
+      child: FutureBuilder<bool>(
+        future: _isBookDownloaded(book['title']),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasData && snapshot.data!) {
+            return ElevatedButton(
               onPressed: () => _openEpub(context),
-              child: Text('开始阅读'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          SizedBox(width: 16),
-          IconButton(
-            icon: Icon(Icons.favorite_border),
-            onPressed: () {
-              // 实现收藏功能
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('已添加到收藏')),
-              );
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.share),
-            onPressed: () {
-              // 实现分享功能
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('分享功能待实现')),
-              );
-            },
-          ),
-        ],
+              child: Text('本地阅读'),
+            );
+          } else {
+            return Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    await _downloadEpub(context);
+                    await _bookService.addBookToBookshelf(book);
+                  },
+                  child: Text('添加书架'),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _openEpub(context),
+                    child: Text('在线阅读'),
+                  ),
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
+  }
+
+  Future<bool> _isBookDownloaded(String title) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath = '${dir.path}/${title}.epub';
+    final file = File(filePath);
+    return file.existsSync();
+  }
+
+  Future<void> _downloadEpub(BuildContext context) async {
+    final epubUrl = 'https://app.enladder.com/${book['epubUrl']}';
+    final response = await http.get(Uri.parse(epubUrl));
+
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/${book['title']}.epub';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('下载成功: ${book['title']}.epub')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('下载失败，请重试')),
+      );
+    }
   }
 
   void _openEpub(BuildContext context) async {
@@ -174,19 +205,16 @@ class BookDetailScreen extends StatelessWidget {
       enableTts: true,
     );
 
-    // 下载电子书
     final epubUrl = 'https://app.enladder.com/${book['epubUrl']}';
     final response = await http.get(Uri.parse(epubUrl));
 
     if (response.statusCode == 200) {
-      // 保存文件到本地
       final bytes = response.bodyBytes;
       final dir = await getApplicationDocumentsDirectory();
       final filePath = '${dir.path}/book.epub';
       final file = File(filePath);
       await file.writeAsBytes(bytes);
 
-      // 打开下载的电子书
       VocsyEpub.open(filePath);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

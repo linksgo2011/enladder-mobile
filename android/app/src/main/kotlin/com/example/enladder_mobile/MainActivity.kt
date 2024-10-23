@@ -1,4 +1,4 @@
-package com.example.enladder_mobile
+package com.enladder.enladder_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

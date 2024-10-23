@@ -1,5 +1,7 @@
+import 'package:enladder_mobile/screens/explore_screen.dart';
+
+import 'screens/bookshelf_screen.dart';
 import 'package:flutter/material.dart';
-import 'screens/course_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'widgets/bottom_navigation.dart';
@@ -31,7 +33,8 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const CourseScreen(),
+    const BookshelfScreen(),
+    const ExploreScreen(),
     const ProfileScreen(),
   ];
 
