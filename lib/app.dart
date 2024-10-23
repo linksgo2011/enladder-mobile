@@ -44,8 +44,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('阅读 APP'),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(30.0), // 进一步减小高度
+        child: AppBar(
+          title: Text('Enladder 英语梯子', style: TextStyle(fontSize: 16)),
+          centerTitle: true,
+          elevation: 0,
+          automaticallyImplyLeading: false, // 移除默认的返回按钮
+        ),
       ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigation(

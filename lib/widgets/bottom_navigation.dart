@@ -20,7 +20,11 @@ class BottomNavigation extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.book),
-          label: '课程',
+          label: '书架',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.explore),
+          label: '发现',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
@@ -29,8 +33,9 @@ class BottomNavigation extends StatelessWidget {
       ],
       currentIndex: selectedIndex,
       selectedItemColor: Colors.blue,
+      unselectedItemColor: Colors.grey,
       onTap: onItemTapped,
+      type: BottomNavigationBarType.fixed,
     );
   }
 }
-
