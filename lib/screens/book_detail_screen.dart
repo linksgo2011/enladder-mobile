@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vocsy_epub_viewer/epub_viewer.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 
 class BookDetailScreen extends StatelessWidget {
   final dynamic book;
@@ -162,7 +165,7 @@ class BookDetailScreen extends StatelessWidget {
     );
   }
 
-  void _openEpub(BuildContext context) {
+  void _openEpub(BuildContext context) async {
     VocsyEpub.setConfig(
       themeColor: Theme.of(context).primaryColor,
       identifier: "iosBook",
@@ -170,9 +173,25 @@ class BookDetailScreen extends StatelessWidget {
       allowSharing: true,
       enableTts: true,
     );
-    
-    // TODO 
-    // VocsyEpub.open('https://app.enladder.com/${book['epubUrl']}');
-    VocsyEpub.open('https://app.enladder.com/books/The%20Life%20and%20Adventures%20of%20Robinson%20Crusoe%20by%20Daniel%20Defoe/hints.epub');
+
+    // 下载电子书
+    final epubUrl = 'https://app.enladder.com/${book['epubUrl']}';
+    final response = await http.get(Uri.parse(epubUrl));
+
+    if (response.statusCode == 200) {
+      // 保存文件到本地
+      final bytes = response.bodyBytes;
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/book.epub';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      // 打开下载的电子书
+      VocsyEpub.open(filePath);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('下载失败，请重试')),
+      );
+    }
   }
 }
