@@ -4,19 +4,39 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../services/book_service.dart';
+import '../../services/book_service.dart';
 
-class BookDetailScreen extends StatelessWidget {
+class BookDetailScreen extends StatefulWidget {
   final dynamic book;
-  final BookService _bookService = BookService();
 
-   BookDetailScreen({Key? key, required this.book}) : super(key: key);
+  BookDetailScreen({Key? key, required this.book}) : super(key: key);
+
+  @override
+  _BookDetailScreenState createState() => _BookDetailScreenState();
+}
+
+class _BookDetailScreenState extends State<BookDetailScreen> {
+  final BookService _bookService = BookService();
+  bool _isBookInBookshelf = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBookInBookshelf();
+  }
+
+  Future<void> _checkBookInBookshelf() async {
+    final isInBookshelf = await _bookService.isBookInBookshelf(widget.book['title']);
+    setState(() {
+      _isBookInBookshelf = isInBookshelf;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(book['title']),
+        title: Text(widget.book['title']),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -38,7 +58,7 @@ class BookDetailScreen extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage('https://app.enladder.com/${book['cover']}'),
+          image: NetworkImage('https://app.enladder.com/${widget.book['cover']}'),
           fit: BoxFit.cover,
         ),
       ),
@@ -57,14 +77,14 @@ class BookDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                book['title'],
+                widget.book['title'],
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
               ),
               Text(
-                book['author'],
+                widget.book['author'],
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Colors.white70,
                     ),
@@ -82,7 +102,7 @@ class BookDetailScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildInfoItem(context, '难度', book['difficulty']),
+          _buildInfoItem(context, '难度', widget.book['difficulty']),
           _buildInfoItem(context, '语言', '英语'), // 假设所有书籍都是英语
           _buildInfoItem(context, '页数', '未知'), // 这里可以添加页数信息如果API提供
         ],
@@ -122,7 +142,7 @@ class BookDetailScreen extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            book['description'],
+            widget.book['description'],
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -133,67 +153,42 @@ class BookDetailScreen extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: FutureBuilder<bool>(
-        future: _isBookDownloaded(book['title']),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData && snapshot.data!) {
-            return ElevatedButton(
+      child: Row(
+        children: [
+          if (_isBookInBookshelf)
+            ElevatedButton(
               onPressed: () => _openEpub(context),
               child: Text('本地阅读'),
-            );
-          } else {
-            return Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    await _downloadEpub(context);
-                    await _bookService.addBookToBookshelf(book);
-                  },
-                  child: Text('添加书架'),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _openEpub(context),
-                    child: Text('在线阅读'),
-                  ),
-                ),
-              ],
-            );
-          }
-        },
+            )
+          else ...[
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await _bookService.downloadBook('https://app.enladder.com/${widget.book['epubUrl']}', widget.book['title']);
+                  await _bookService.addBookToBookshelf(widget.book);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('书籍已添加到书架并下载成功')),
+                  );
+                  _checkBookInBookshelf(); // 刷新书架状态
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('下载失败: $e')),
+                  );
+                }
+              },
+              child: Text('添加书架'),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _openEpub(context),
+                child: Text('在线阅读'),
+              ),
+            ),
+          ],
+        ],
       ),
     );
-  }
-
-  Future<bool> _isBookDownloaded(String title) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final filePath = '${dir.path}/${title}.epub';
-    final file = File(filePath);
-    return file.existsSync();
-  }
-
-  Future<void> _downloadEpub(BuildContext context) async {
-    final epubUrl = 'https://app.enladder.com/${book['epubUrl']}';
-    final response = await http.get(Uri.parse(epubUrl));
-
-    if (response.statusCode == 200) {
-      final bytes = response.bodyBytes;
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath = '${dir.path}/${book['title']}.epub';
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('下载成功: ${book['title']}.epub')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('下载失败，请重试')),
-      );
-    }
   }
 
   void _openEpub(BuildContext context) async {
@@ -205,21 +200,8 @@ class BookDetailScreen extends StatelessWidget {
       enableTts: true,
     );
 
-    final epubUrl = 'https://app.enladder.com/${book['epubUrl']}';
-    final response = await http.get(Uri.parse(epubUrl));
-
-    if (response.statusCode == 200) {
-      final bytes = response.bodyBytes;
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath = '${dir.path}/book.epub';
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
-
-      VocsyEpub.open(filePath);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('下载失败，请重试')),
-      );
-    }
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath = '${dir.path}/${widget.book['title']}.epub';
+    VocsyEpub.open(filePath);
   }
 }

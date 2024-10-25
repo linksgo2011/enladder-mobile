@@ -1,9 +1,9 @@
-import 'package:enladder_mobile/screens/explore_screen.dart';
+import 'package:enladder_mobile/screens/explore/explore_screen.dart';
 
-import 'screens/bookshelf_screen.dart';
+import 'screens/books/bookshelf_screen.dart';
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/profile/profile_screen.dart';
 import 'widgets/bottom_navigation.dart';
 
 class MyApp extends StatelessWidget {

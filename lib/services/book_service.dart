@@ -51,4 +51,34 @@ class BookService {
     final updatedJsonString = json.encode(bookshelf);
     await File(filePath).writeAsString(updatedJsonString);
   }
+
+  Future<void> clearBookshelf() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath = '${dir.path}/$_bookshelfFileName';
+    final file = File(filePath);
+
+    // 检查文件是否存在
+    if (await file.exists()) {
+      await file.writeAsString('[]'); // 清空文件内容，写入空数组
+    }
+  }
+
+  Future<bool> isBookInBookshelf(String title) async {
+    final books = await loadBooksFromBookshelf();
+    return books.any((book) => book['title'] == title);
+  }
+
+  Future<void> downloadBook(String epubUrl, String title) async {
+    final response = await http.get(Uri.parse(epubUrl));
+
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/$title.epub';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+    } else {
+      throw Exception('下载失败');
+    }
+  }
 }

@@ -27,8 +27,8 @@ class BottomNavigation extends StatelessWidget {
           label: '发现',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: '我的',
+          icon: Icon(Icons.settings),
+          label: '设置',
         ),
       ],
       currentIndex: selectedIndex,

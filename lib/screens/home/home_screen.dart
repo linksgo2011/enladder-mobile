@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'book_list_screen.dart';
-import '../services/book_service.dart';
-import 'book_detail_screen.dart';
+import '../books/book_list_screen.dart';
+import '../../services/book_service.dart';
+import '../books/book_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
