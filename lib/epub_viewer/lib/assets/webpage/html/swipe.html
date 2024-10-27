@@ -14,11 +14,11 @@
   <link rel="stylesheet" type="text/css" href="examples.css">
 
   <style type="text/css">
-    body {
+    /* body {
       display: flex;
       -webkit-align-items: center;
       -webkit-justify-content: center;
-    }
+    } */
 
     #viewer {
       width: 100%;
@@ -84,6 +84,22 @@
         snap: snap,
         allowScriptedContent: allowScriptedContent,
       });
+
+      // 在显示内容之前设置字体和字体大小
+      rendition.themes.register("customTheme", {
+        p: {
+          "font-family": '"Georgia", "Merriweather", "Times New Roman", serif;', // 你想要的字体，如 'sans-serif' 或 'monospace'
+          "font-size": "160%",    // 设置初始字体大小
+          "line-height": "1.7"    // 设置初始行高
+        },
+        h1: {
+          "font-size": "200%"
+        }
+      });
+
+      // 应用自定义主题
+      rendition.themes.select("customTheme");
+
 
       if(cfi){
         displayed = rendition.display(cfi)

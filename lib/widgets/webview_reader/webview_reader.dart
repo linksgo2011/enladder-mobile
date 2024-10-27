@@ -103,6 +103,9 @@ class _WebviewReaderState extends State<WebviewReader> {
                             });
                           },
                           onEpubLoaded: () async {
+                            setState(() {
+                              isLoading = false;
+                            });
                             print('Epub loaded');
                           },
                           onRelocated: (value) {
