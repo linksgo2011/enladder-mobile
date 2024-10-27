@@ -86,9 +86,9 @@ class BookService {
     }
   }
   
-  Future<String> getBookFilePath(Book book) async {
+  Future<File> getBookFile(Book book) async {
     final dir = await getApplicationDocumentsDirectory();
     final filePath = '${dir.path}/${book.title}.epub';
-    return filePath;
+    return File(filePath);
   }
 }
