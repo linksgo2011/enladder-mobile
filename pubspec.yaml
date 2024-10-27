@@ -10,7 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   vocsy_epub_viewer: ^3.0.0
-  http: ^0.13.5
+  http: ^1.2.2
+  flutter_epub_viewer: 
+    path: './lib/epub_viewer'
 
 dev_dependencies:
   flutter_test:
