@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/book_service.dart'; // 导入 BookService
-import '../profile/about_screen.dart'; // 导入关于页面
+import '../profile/about_screen.dart';
+import '../spikes/epub_test_screen.dart'; // 导入关于页面
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -44,6 +45,16 @@ class ProfileScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AboutScreen()),
+                );
+              },
+            ),
+                        ListTile(
+              title: const Text('实验'),
+              onTap: () {
+                // 导航到关于页面
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const EpubTestScreen()),
                 );
               },
             ),

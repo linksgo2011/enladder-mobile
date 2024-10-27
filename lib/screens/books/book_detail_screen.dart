@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../services/book_service.dart';
+import '../../services/epub_service.dart';
 
 class BookDetailScreen extends StatefulWidget {
   final dynamic book;
@@ -17,6 +18,7 @@ class BookDetailScreen extends StatefulWidget {
 
 class _BookDetailScreenState extends State<BookDetailScreen> {
   final BookService _bookService = BookService();
+  final EpubService _epubService = EpubService();
   bool _isBookInBookshelf = false;
 
   @override
@@ -157,7 +159,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         children: [
           if (_isBookInBookshelf)
             ElevatedButton(
-              onPressed: () => _openEpub(context),
+              onPressed: () => _epubService.openEpub(widget.book['title']),
               child: Text('本地阅读'),
             )
           else ...[
@@ -181,7 +183,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
             SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () => _openEpub(context),
+                onPressed: () => _epubService.openEpub(widget.book['title']),
                 child: Text('在线阅读'),
               ),
             ),
@@ -189,19 +191,5 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         ],
       ),
     );
-  }
-
-  void _openEpub(BuildContext context) async {
-    VocsyEpub.setConfig(
-      themeColor: Theme.of(context).primaryColor,
-      identifier: "iosBook",
-      scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
-      allowSharing: true,
-      enableTts: true,
-    );
-
-    final dir = await getApplicationDocumentsDirectory();
-    final filePath = '${dir.path}/${widget.book['title']}.epub';
-    VocsyEpub.open(filePath);
   }
 }
