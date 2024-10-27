@@ -1,3 +1,4 @@
+import 'package:enladder_mobile/models/book.dart';
 import 'package:flutter/material.dart';
 import 'package:vocsy_epub_viewer/epub_viewer.dart';
 import 'package:path_provider/path_provider.dart';
@@ -6,9 +7,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../services/book_service.dart';
 import '../../services/epub_service.dart';
+import 'book_reader_screen.dart';
+import '../../constants.dart';
 
 class BookDetailScreen extends StatefulWidget {
-  final dynamic book;
+  final Book book;
 
   BookDetailScreen({Key? key, required this.book}) : super(key: key);
 
@@ -28,7 +31,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   Future<void> _checkBookInBookshelf() async {
-    final isInBookshelf = await _bookService.isBookInBookshelf(widget.book['title']);
+    final isInBookshelf = await _bookService.isBookInBookshelf(widget.book.title);
     setState(() {
       _isBookInBookshelf = isInBookshelf;
     });
@@ -38,7 +41,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.book['title']),
+        title: Text(widget.book.title),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -60,7 +63,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       width: double.infinity,
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage('https://app.enladder.com/${widget.book['cover']}'),
+          image: NetworkImage('$baseUrl${widget.book.cover}'),
           fit: BoxFit.cover,
         ),
       ),
@@ -79,14 +82,14 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.book['title'],
+                widget.book.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
               ),
               Text(
-                widget.book['author'],
+                widget.book.author,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Colors.white70,
                     ),
@@ -104,7 +107,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildInfoItem(context, '难度', widget.book['difficulty']),
+          _buildInfoItem(context, '难度', widget.book.difficulty),
           _buildInfoItem(context, '语言', '英语'), // 假设所有书籍都是英语
           _buildInfoItem(context, '页数', '未知'), // 这里可以添加页数信息如果API提供
         ],
@@ -144,7 +147,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           ),
           SizedBox(height: 8),
           Text(
-            widget.book['description'],
+            widget.book.description,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -159,14 +162,14 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         children: [
           if (_isBookInBookshelf)
             ElevatedButton(
-              onPressed: () => _epubService.openEpub(widget.book['title']),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => BookReaderScreen(book: widget.book))),
               child: Text('本地阅读'),
             )
           else ...[
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await _bookService.downloadBook('https://app.enladder.com/${widget.book['epubUrl']}', widget.book['title']);
+                  await _bookService.downloadBook('$epubBaseUrl${widget.book.epubUrl}', widget.book.title);
                   await _bookService.addBookToBookshelf(widget.book);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('书籍已添加到书架并下载成功')),
@@ -183,7 +186,16 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
             SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () => _epubService.openEpub(widget.book['title']),
+                onPressed: () async {
+                  try {
+                    await _bookService.downloadBook('$epubBaseUrl${widget.book.epubUrl}', widget.book.title);
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => BookReaderScreen(book: widget.book)));
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('下载失败: $e')),
+                    );
+                  }
+                },
                 child: Text('在线阅读'),
               ),
             ),

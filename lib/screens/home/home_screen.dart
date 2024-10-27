@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/book.dart';
 import '../books/book_list_screen.dart';
 import '../../services/book_service.dart';
 import '../books/book_detail_screen.dart';
@@ -13,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final BookService _bookService = BookService();
-  List<dynamic> _books = [];
+  List<Book> _books = [];
   bool _isLoading = true;
 
   @override
@@ -121,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBookCard(dynamic book) {
+  Widget _buildBookCard(Book book) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -142,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
               child: Image.network(
-                'https://app.enladder.com/${book['cover']}', // 使用完整的 URL
+                'https://app.enladder.com/${book.cover}', // 使用完整的 URL
                 height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -163,23 +164,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    book['title'] ?? book['cnTitle'],
+                    book.title ?? book.cnTitle,
                     style: Theme.of(context).textTheme.titleMedium,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4),
                   Text(
-                    book['author'],
+                    book.author,
                     style: Theme.of(context).textTheme.bodyMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '难度: ${book['difficulty']}',
+                    '难度: ${book.difficulty}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: _getDifficultyColor(book['difficulty']),
+                      color: _getDifficultyColor(book.difficulty),
                     ),
                   ),
                 ],
@@ -193,11 +194,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color _getDifficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
-      case 'easy':
+      case 'Easy':
         return Colors.green;
-      case 'medium':
+      case 'Intermediate':
         return Colors.orange;
-      case 'hard':
+      case 'Hard':
         return Colors.red;
       default:
         return Colors.black;
@@ -209,8 +210,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (searchTerm.isNotEmpty) {
       // 过滤书籍列表
       List<dynamic> searchResults = _books.where((book) {
-        return (book['title']?.toLowerCase().contains(searchTerm.toLowerCase()) ?? false) ||
-               (book['author']?.toLowerCase().contains(searchTerm.toLowerCase()) ?? false);
+        return (book.title?.toLowerCase().contains(searchTerm.toLowerCase()) ?? false) ||
+               (book.author?.toLowerCase().contains(searchTerm.toLowerCase()) ?? false);
       }).toList();
 
       // 导航到搜索结果页面
@@ -259,8 +260,8 @@ class SearchResultsScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final book = searchResults[index];
                 return ListTile(
-                  title: Text(book['title'] ?? '未知书名'),
-                  subtitle: Text(book['author'] ?? '未知作者'),
+                  title: Text(book.title ?? '未知书名'),
+                  subtitle: Text(book.author ?? '未知作者'),
                   onTap: () {
                     // 点击后导航到书籍详情页面
                     Navigator.push(
