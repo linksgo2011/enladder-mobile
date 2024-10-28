@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/book.dart';
 import '../books/book_list_screen.dart';
 import '../../services/book_service.dart';
@@ -142,20 +143,25 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-              child: Image.network(
-                'https://app.enladder.com/${book.cover}', // 使用完整的 URL
+              child: CachedNetworkImage(
+                imageUrl: 'https://app.enladder.com/${book.cover}', // 使用完整的 URL
                 height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 180,
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.book, size: 60),
-                    ),
-                  );
-                },
+                placeholder: (context, url) => Container(
+                  height: 180,
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  height: 180,
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Icon(Icons.book, size: 60),
+                  ),
+                ),
               ),
             ),
             Padding(
