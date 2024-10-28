@@ -30,12 +30,8 @@ class ProfileScreen extends StatelessWidget {
             ),
             ListTile(
               title: const Text('清理书架'),
-              onTap: () async {
-                // 清理书架
-                await _bookService.clearBookshelf();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('书架已清理')),
-                );
+              onTap: () {
+                _confirmAndClearBookshelf(context, _bookService);
               },
             ),
             ListTile(
@@ -48,19 +44,54 @@ class ProfileScreen extends StatelessWidget {
                 );
               },
             ),
-                        ListTile(
-              title: const Text('实验'),
-              onTap: () {
-                // 导航到关于页面
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EpubTestScreen()),
-                );
-              },
-            ),
+            //             ListTile(
+            //   title: const Text('实验'),
+            //   onTap: () {
+            //     // 导航到关于页面
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => const EpubTestScreen()),
+            //     );
+            //   },
+            // ),
           ],
         ),
       ),
     );
+  }
+
+  void _confirmAndClearBookshelf(BuildContext context, BookService bookService) async {
+    // Show confirmation dialog
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('确认清理书架'),
+          content: const Text('您确定要清理书架吗？此操作无法撤销。'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // User pressed No
+              },
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // User pressed Yes
+              },
+              child: const Text('确认'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // If the user confirmed, clear the bookshelf
+    if (shouldClear == true) {
+      await bookService.clearBookshelf();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('书架已清理')),
+      );
+    }
   }
 }

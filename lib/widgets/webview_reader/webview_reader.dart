@@ -3,6 +3,7 @@
  */
 import 'dart:io';
 import 'dart:convert';
+import 'package:enladder_mobile/widgets/webview_reader/word_lookup_dialog.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:enladder_mobile/models/book.dart';
@@ -12,6 +13,7 @@ import 'package:enladder_mobile/widgets/webview_reader/chapter_drawer.dart';
 import 'package:enladder_mobile/widgets/webview_reader/search_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_epub_viewer/flutter_epub_viewer.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class WebviewReader extends StatefulWidget {
   WebviewReader({Key? key, required this.book}) : super(key: key);
@@ -26,7 +28,8 @@ class _WebviewReaderState extends State<WebviewReader> {
   final bookService = BookService();
   final bookReadingService = BookReadingService();
   final epubController = EpubController();
-  var textSelectionCfi = '';
+  final FlutterTts flutterTts = FlutterTts();
+  String textSelection = '';
   bool isLoading = true;
   // 用于展示进度
   double progress = 0.0;
@@ -148,21 +151,32 @@ class _WebviewReaderState extends State<WebviewReader> {
         print("Annotation clicked $cfi");
       },
       onTextSelected: (epubTextSelection) {
-        textSelectionCfi = epubTextSelection.selectionCfi;
-        print(textSelectionCfi);
+        textSelection = epubTextSelection.selectedText;
       },
     );
   }
 
   List<ContextMenuItem> _buildContextMenuItems() {
     return [
-      // ContextMenuItem(
-      //   title: "Highlight",
-      //   id: 1,
-      //   action: () async {
-      //     epubController.addHighlight(cfi: textSelectionCfi);
-      //   },
-      // ),
+      ContextMenuItem(
+        title: "查词",
+        id: 1,
+        action: () async {
+          _showWordLookupDialog(textSelection);
+        },
+      ),
     ];
+  }
+
+  void _showWordLookupDialog(String word) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return WordLookupDialog(
+          word: word,
+          flutterTts: flutterTts, // Pass the FlutterTts instance
+        );
+      },
+    );
   }
 }
