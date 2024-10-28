@@ -30,12 +30,13 @@ class _BookReaderState extends State<BookReaderScreen> {
 
   Future<Map<String, dynamic>> _initializeReader() async {
     final file = await _bookService.getBookFile(widget.book);
-    final startCfi = await _bookReadingService.loadReadingPosition(widget.book.id);
+    var readdingPosition = await _bookReadingService.loadReadingPosition(widget.book.id);
     final config = await _profileService.getAllConfigurations();
 
     return {
       'file': file,
-      'startCfi': startCfi,
+      'startCfi': readdingPosition['startCfi'] as String?,
+      'progress': readdingPosition['progress'] as double?,
       'config': config,
     };
   }
@@ -55,6 +56,7 @@ class _BookReaderState extends State<BookReaderScreen> {
             book: widget.book,
             file: data['file'],
             startCfi: data['startCfi'],
+            progress: data['progress'],
             config: data['config'],
           );
         } else {

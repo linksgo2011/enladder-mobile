@@ -17,12 +17,14 @@ class WebviewReader extends StatefulWidget {
     required this.book,
     required this.file,
     required this.startCfi,
+    required this.progress,
     required this.config,
   }) : super(key: key);
 
   final Book book;
   final File file; // The EPUB file
-  final String? startCfi; // The starting CFI for reading
+  final String? startCfi; 
+  final double? progress;
   final Map<String, dynamic> config; // Configuration settings
 
   @override
@@ -40,6 +42,10 @@ class _WebviewReaderState extends State<WebviewReader> {
   @override
   void initState() {
     super.initState();
+    setState(() {
+        progress = widget.progress ?? 0.0; 
+        print("加载进度：$progress");
+    }); 
   }
 
   @override
@@ -68,16 +74,25 @@ class _WebviewReaderState extends State<WebviewReader> {
         ],
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            _buildEpubViewer(),
-            if (isLoading)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
-          ],
-        ),
-      ),
+          child: Column(
+        children: [
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.transparent,
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                _buildEpubViewer(),
+                if (isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      )),
     );
   }
 
@@ -111,10 +126,15 @@ class _WebviewReaderState extends State<WebviewReader> {
         print('Epub loaded');
       },
       onRelocated: (value) {
+        // 初次获得的进度值为 0 即使进度已经有了
+        bookReadingService.saveReadingPosition(
+          widget.book.id, 
+          value.progress==0?progress:value.progress, 
+          value.startCfi
+        );
         setState(() {
-          progress = value.progress;
+          progress = value.progress==0?progress:value.progress;
         });
-        bookReadingService.saveReadingPosition(widget.book.id, value.progress, value.startCfi);
       },
       onAnnotationClicked: (cfi) {
         print("Annotation clicked $cfi");

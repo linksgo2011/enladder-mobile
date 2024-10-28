@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class BookReadingService {
-  Future<String?> loadReadingPosition(String bookId) async {
+  Future<Map<String, dynamic>> loadReadingPosition(String bookId) async {
     final directory = await getApplicationDocumentsDirectory();
     final filePath = '${directory.path}/reading_position_$bookId.json'; // Unique file for each book
     final file = File(filePath);
@@ -11,9 +11,13 @@ class BookReadingService {
     if (await file.exists()) {
       final contents = await file.readAsString();
       final data = jsonDecode(contents);
-      return data['startCfi'];
+      print(data);
+      return data;
     }
-    return null; // Return null if no saved position
+    return {
+      'startCfi': null,
+      'progress': 0.0
+    };
   }
 
   Future<void> saveReadingPosition(String bookId, double progress, String startCfi) async {
@@ -24,6 +28,9 @@ class BookReadingService {
       'startCfi': startCfi,
       'progress': progress
     };
+
+    print("存储进度: $data");
+    
     await file.writeAsString(jsonEncode(data));
   }
 }
