@@ -16,6 +16,7 @@ dependencies:
   cached_network_image: ^3.2.1
   path_provider: ^2.0.11
   flutter_tts: ^3.6.1
+  json_theme_plus: ^6.6.1
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +28,8 @@ dev_dependencies:
   
 flutter:
   uses-material-design: true
+  assets:
+    - assets/sepia.json
 
 flutter_icons:
   android: true

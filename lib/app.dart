@@ -6,16 +6,17 @@ import 'screens/home/home_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'widgets/bottom_navigation.dart';
 
+
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ThemeData theme;
+  
+  const MyApp({Key? key, required this.theme}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '阅读 APP',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      title: '英语梯子 Enladder',
+      theme: theme,
       home: const MainScreen(),
     );
   }
