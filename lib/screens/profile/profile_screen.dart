@@ -1,3 +1,4 @@
+import 'package:enladder_mobile/screens/profile/common_setting.dart';
 import 'package:flutter/material.dart';
 import '../../services/book_service.dart'; // 导入 BookService
 import '../profile/about_screen.dart';
@@ -22,9 +23,10 @@ class ProfileScreen extends StatelessWidget {
             ListTile(
               title: const Text('通用'),
               onTap: () {
-                // 导航到设置页面或显示提示
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('设置功能尚未开发')),
+                // 导航到通用设置页面
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CommonSetting()),
                 );
               },
             ),

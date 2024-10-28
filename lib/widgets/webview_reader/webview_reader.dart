@@ -3,6 +3,7 @@
  */
 import 'dart:io';
 import 'dart:convert';
+import 'package:enladder_mobile/services/profile_service.dart';
 import 'package:enladder_mobile/widgets/webview_reader/word_lookup_dialog.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -26,6 +27,7 @@ class WebviewReader extends StatefulWidget {
 
 class _WebviewReaderState extends State<WebviewReader> {
   final bookService = BookService();
+  final profileService = ProfileService();
   final bookReadingService = BookReadingService();
   final epubController = EpubController();
   final FlutterTts flutterTts = FlutterTts();
@@ -45,9 +47,14 @@ class _WebviewReaderState extends State<WebviewReader> {
   Future<Map<String, dynamic>> _initializeReader() async {
     final file = await bookService.getBookFile(widget.book);
     final startCfi = await bookReadingService.loadReadingPosition(widget.book.id);
+    final config = await profileService.getAllConfigurations();
+    
+    print(config);
+    
     return {
       'file': file,
       'startCfi': startCfi,
+      'config': config
     };
   }
 
@@ -85,6 +92,7 @@ class _WebviewReaderState extends State<WebviewReader> {
             } else {
               final file = snapshot.data!['file'] as File;
               final startCfi = snapshot.data!['startCfi'] as String?;
+              final config = snapshot.data!['config'] as Map<String, dynamic>;
               return Column(
                 children: [
                   LinearProgressIndicator(
@@ -94,7 +102,7 @@ class _WebviewReaderState extends State<WebviewReader> {
                   Expanded(
                     child: Stack(
                       children: [
-                        _buildEpubViewer(file, startCfi),
+                        _buildEpubViewer(file, startCfi, config),
                         if (isLoading)
                           const Center(
                             child: CircularProgressIndicator(),
@@ -111,7 +119,7 @@ class _WebviewReaderState extends State<WebviewReader> {
     );
   }
 
-  Widget _buildEpubViewer(File file, String? startCfi) {
+  Widget _buildEpubViewer(File file, String? startCfi, Map<String, dynamic> config) {
     print("Open book ${file.path} cfi: ${startCfi}");
     
     return EpubViewer(
@@ -119,7 +127,8 @@ class _WebviewReaderState extends State<WebviewReader> {
       epubController: epubController,
       initialCfi: startCfi,
       displaySettings: EpubDisplaySettings(
-        fontSize: 24,
+        fontSize: config['fontSize'],
+        theme: config['theme'],
         flow: EpubFlow.paginated,
         snap: true,
         allowScriptedContent: false,

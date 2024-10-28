@@ -69,7 +69,7 @@
 
     
 
-    function loadBook(data, cfi, manager, flow, spread, snap,allowScriptedContent){
+    function loadBook(data, cfi, manager, flow, spread, snap,allowScriptedContent, fontSize){
       var viewportHeight = window.innerHeight;
       document.getElementById('viewer').style.height = viewportHeight;
       var uint8Array = new Uint8Array(data)
@@ -89,7 +89,7 @@
       rendition.themes.register("customTheme", {
         p: {
           "font-family": '"Georgia", "Merriweather", "Times New Roman", serif;', // 你想要的字体，如 'sans-serif' 或 'monospace'
-          "font-size": "160%",    // 设置初始字体大小
+          "font-size": fontSize,    // 设置初始字体大小
           "line-height": "1.7"    // 设置初始行高
         },
         h1: {

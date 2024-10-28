@@ -1,5 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-//@dart=3.0
+// @dart=3.0
+
 part of 'helper.dart';
 
 // **************************************************************************
@@ -50,7 +51,8 @@ Map<String, dynamic> _$EpubLocationToJson(EpubLocation instance) =>
 
 EpubDisplaySettings _$EpubDisplaySettingsFromJson(Map<String, dynamic> json) =>
     EpubDisplaySettings(
-      fontSize: (json['fontSize'] as num?)?.toInt() ?? 15,
+      fontSize: json['fontSize'] as String? ?? "100%",
+      theme: json['theme'] as String? ?? "light",
       spread: $enumDecodeNullable(_$EpubSpreadEnumMap, json['spread']) ??
           EpubSpread.auto,
       flow: $enumDecodeNullable(_$EpubFlowEnumMap, json['flow']) ??
@@ -68,6 +70,7 @@ Map<String, dynamic> _$EpubDisplaySettingsToJson(
         EpubDisplaySettings instance) =>
     <String, dynamic>{
       'fontSize': instance.fontSize,
+      'theme': instance.theme,
       'spread': _$EpubSpreadEnumMap[instance.spread]!,
       'flow': _$EpubFlowEnumMap[instance.flow]!,
       'defaultDirection':

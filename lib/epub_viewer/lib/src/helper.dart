@@ -69,7 +69,8 @@ class EpubLocation {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false)
 class EpubDisplaySettings {
-  int fontSize;
+  String fontSize;
+  String theme;
   EpubSpread spread;
   EpubFlow flow;
   EpubDefaultDirection defaultDirection;
@@ -80,7 +81,8 @@ class EpubDisplaySettings {
   bool snap;
 
   EpubDisplaySettings({
-    this.fontSize = 15,
+    this.fontSize = "100%",
+    this.theme = "light",
     this.spread = EpubSpread.auto,
     this.flow = EpubFlow.scrolled,
     this.allowScriptedContent = false,

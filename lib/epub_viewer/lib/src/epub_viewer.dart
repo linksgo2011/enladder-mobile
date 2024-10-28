@@ -172,10 +172,12 @@ class _EpubViewerState extends State<EpubViewer> {
     bool snap = displaySettings.snap;
     bool allowScripted = displaySettings.allowScriptedContent;
     String cfi = widget.initialCfi ?? "";
+    String fontSize = displaySettings.fontSize;
+
+    print("loadBook: $cfi $manager $flow $spread $snap, $allowScripted, $fontSize");
 
     webViewController?.evaluateJavascript(
-        source:
-            'loadBook([${data.join(',')}], "$cfi", "$manager", "$flow", "$spread", $snap, $allowScripted)');
+        source: 'loadBook([${data.join(',')}], "$cfi", "$manager", "$flow", "$spread", $snap, $allowScripted, "$fontSize")');
   }
 
   @override
