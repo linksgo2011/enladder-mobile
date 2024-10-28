@@ -14,6 +14,7 @@ dependencies:
   flutter_epub_viewer: 
     path: './lib/epub_viewer'
   cached_network_image: ^3.2.1
+  path_provider: ^2.0.11
 
 dev_dependencies:
   flutter_test:

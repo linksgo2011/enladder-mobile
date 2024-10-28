@@ -2,9 +2,12 @@
  * 基于 Epub.js 实现的阅读器，被 lib/epub_viewer 再次封装
  */
 import 'dart:io';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:enladder_mobile/models/book.dart';
 import 'package:enladder_mobile/services/book_service.dart';
+import 'package:enladder_mobile/services/book_reading_service.dart';
 import 'package:enladder_mobile/widgets/webview_reader/chapter_drawer.dart';
 import 'package:enladder_mobile/widgets/webview_reader/search_page.dart';
 import 'package:flutter/material.dart';
@@ -21,16 +24,28 @@ class WebviewReader extends StatefulWidget {
 
 class _WebviewReaderState extends State<WebviewReader> {
   final bookService = BookService();
+  final bookReadingService = BookReadingService();
   final epubController = EpubController();
   var textSelectionCfi = '';
   bool isLoading = true;
+  // 用于展示进度
   double progress = 0.0;
-  late Future<File> bookFile;
+
+  late Future<Map<String, dynamic>> combinedFuture;
 
   @override
   void initState() {
     super.initState();
-    bookFile = bookService.getBookFile(widget.book); // Fetch the file asynchronously
+    combinedFuture = _initializeReader(); // Combine the futures
+  }
+
+  Future<Map<String, dynamic>> _initializeReader() async {
+    final file = await bookService.getBookFile(widget.book);
+    final startCfi = await bookReadingService.loadReadingPosition(widget.book.id);
+    return {
+      'file': file,
+      'startCfi': startCfi,
+    };
   }
 
   @override
@@ -57,15 +72,16 @@ class _WebviewReaderState extends State<WebviewReader> {
         ],
       ),
       body: SafeArea(
-        child: FutureBuilder<File>(
-          future: bookFile,
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: combinedFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else {
-              final file = snapshot.data!;
+              final file = snapshot.data!['file'] as File;
+              final startCfi = snapshot.data!['startCfi'] as String?;
               return Column(
                 children: [
                   LinearProgressIndicator(
@@ -75,58 +91,11 @@ class _WebviewReaderState extends State<WebviewReader> {
                   Expanded(
                     child: Stack(
                       children: [
-                        EpubViewer(
-                          epubSource: EpubSource.fromFile(file), // 使用文件路径打开
-                          epubController: epubController,
-                          displaySettings: EpubDisplaySettings(
-                            fontSize: 24,
-                            flow: EpubFlow.paginated,
-                            snap: true,
-                            allowScriptedContent: false,
-                          ),
-                          selectionContextMenu: ContextMenu(
-                            menuItems: [
-                              ContextMenuItem(
-                                title: "Highlight",
-                                id: 1,
-                                action: () async {
-                                  epubController.addHighlight(cfi: textSelectionCfi);
-                                },
-                              ),
-                            ],
-                            settings: ContextMenuSettings(
-                                hideDefaultSystemContextMenuItems: true),
-                          ),
-                          onChaptersLoaded: (chapters) {
-                            setState(() {
-                              isLoading = false;
-                            });
-                          },
-                          onEpubLoaded: () async {
-                            setState(() {
-                              isLoading = false;
-                            });
-                            print('Epub loaded');
-                          },
-                          onRelocated: (value) {
-                            setState(() {
-                              progress = value.progress;
-                            });
-                          },
-                          onAnnotationClicked: (cfi) {
-                            print("Annotation clicked $cfi");
-                          },
-                          onTextSelected: (epubTextSelection) {
-                            textSelectionCfi = epubTextSelection.selectionCfi;
-                            print(textSelectionCfi);
-                          },
-                        ),
-                        Visibility(
-                          visible: isLoading,
-                          child: const Center(
+                        _buildEpubViewer(file, startCfi),
+                        if (isLoading)
+                          const Center(
                             child: CircularProgressIndicator(),
                           ),
-                        )
                       ],
                     ),
                   ),
@@ -137,5 +106,63 @@ class _WebviewReaderState extends State<WebviewReader> {
         ),
       ),
     );
+  }
+
+  Widget _buildEpubViewer(File file, String? startCfi) {
+    print("Open book ${file.path} cfi: ${startCfi}");
+    
+    return EpubViewer(
+      epubSource: EpubSource.fromFile(file), // 使用文件路径打开
+      epubController: epubController,
+      initialCfi: startCfi,
+      displaySettings: EpubDisplaySettings(
+        fontSize: 24,
+        flow: EpubFlow.paginated,
+        snap: true,
+        allowScriptedContent: false,
+      ),
+      selectionContextMenu: ContextMenu(
+        menuItems: _buildContextMenuItems(),
+        settings: ContextMenuSettings(
+          hideDefaultSystemContextMenuItems: true,
+        ),
+      ),
+      onChaptersLoaded: (chapters) {
+        setState(() {
+          isLoading = false;
+        });
+      },
+      onEpubLoaded: () async {
+        setState(() {
+          isLoading = false;
+        });
+        print('Epub loaded');
+      },
+      onRelocated: (value) {
+        setState(() {
+          progress = value.progress;
+        });
+        bookReadingService.saveReadingPosition(widget.book.id, value.progress, value.startCfi);
+      },
+      onAnnotationClicked: (cfi) {
+        print("Annotation clicked $cfi");
+      },
+      onTextSelected: (epubTextSelection) {
+        textSelectionCfi = epubTextSelection.selectionCfi;
+        print(textSelectionCfi);
+      },
+    );
+  }
+
+  List<ContextMenuItem> _buildContextMenuItems() {
+    return [
+      // ContextMenuItem(
+      //   title: "Highlight",
+      //   id: 1,
+      //   action: () async {
+      //     epubController.addHighlight(cfi: textSelectionCfi);
+      //   },
+      // ),
+    ];
   }
 }

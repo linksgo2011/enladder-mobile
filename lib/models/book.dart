@@ -1,4 +1,5 @@
 class Book {
+  final String id;
   final String title;
   final String cnTitle;
   final String author;
@@ -8,6 +9,7 @@ class Book {
   final String description;
 
   Book({
+    required this.id,
     required this.title,
     required this.cnTitle,
     required this.author,
@@ -19,6 +21,7 @@ class Book {
 
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
+      id: json['id'],
       title: json['title'],
       cnTitle: json['cnTitle'],
       author: json['author'],
@@ -31,6 +34,7 @@ class Book {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'title': title,
       'cnTitle': cnTitle,
       'author': author,
