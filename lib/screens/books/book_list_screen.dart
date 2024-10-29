@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/book_service.dart';
+import '../../models/book.dart';
 import 'book_detail_screen.dart';
 
 class BookListScreen extends StatefulWidget {
@@ -11,7 +12,7 @@ class BookListScreen extends StatefulWidget {
 
 class _BookListScreenState extends State<BookListScreen> {
   final BookService _bookService = BookService();
-  List<dynamic> _books = [];
+  List<Book> _books = [];
   bool _isLoading = true;
 
   @override
@@ -51,7 +52,7 @@ class _BookListScreenState extends State<BookListScreen> {
                 final book = _books[index];
                 return ListTile(
                   leading: Image.network(
-                    book['cover'],
+                    book.cover,
                     width: 50,
                     height: 75,
                     fit: BoxFit.cover,
@@ -59,9 +60,9 @@ class _BookListScreenState extends State<BookListScreen> {
                       return const Icon(Icons.book, size: 50);
                     },
                   ),
-                  title: Text(book['title']),
-                  subtitle: Text(book['author']),
-                  trailing: Text(book['difficulty']),
+                  title: Text(book.title),
+                  subtitle: Text(book.author),
+                  trailing: Text(book.difficulty),
                   onTap: () => _navigateToBookDetail(book),
                 );
               },
@@ -69,7 +70,7 @@ class _BookListScreenState extends State<BookListScreen> {
     );
   }
 
-  void _navigateToBookDetail(dynamic book) {
+  void _navigateToBookDetail(Book book) {
     Navigator.push(
       context,
       MaterialPageRoute(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // For SystemNavigator
 import '../../services/profile_service.dart';
 import '../../models/settings.dart'; // Import the settings model
 
@@ -30,10 +31,38 @@ class _CommonSettingState extends State<CommonSetting> {
   }
 
   Future<void> _saveConfig() async {
-    await _profileService.saveConfig(_config);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('设置已保存')),
-    );
+    // Show confirmation dialog before saving
+    final shouldRestart = await _showRestartDialog();
+    if (shouldRestart) {
+      await _profileService.saveConfig(_config);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('设置已保存，请重启应用以应用更改')),
+      );
+      // Restart the app
+      SystemNavigator.pop(); // Close the app
+    }
+  }
+
+  Future<bool> _showRestartDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('重启应用'),
+          content: const Text('为了更好的体验，请重启应用。您确定要保存设置并重启吗？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // Return false
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true), // Return true
+              child: const Text('确定'),
+            ),
+          ],
+        );
+      },
+    ).then((value) => value ?? false); // Return false if null
   }
 
   @override
@@ -47,15 +76,7 @@ class _CommonSettingState extends State<CommonSetting> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, // Align items to the start
           children: [
-            // Header for Reader Settings
-            const Text(
-              '阅读器设置',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16), // Add some space below the header
+            const SizedBox(height: 20), // Increased space above the dropdowns
             DropdownButtonFormField<ThemeOption>(
               value: ThemeOption.values.firstWhere((e) => e.name == _config['theme']),
               decoration: const InputDecoration(labelText: '主题'),
@@ -71,6 +92,7 @@ class _CommonSettingState extends State<CommonSetting> {
                 });
               },
             ),
+            const SizedBox(height: 16), // Space between dropdowns
             DropdownButtonFormField<FontSizeOption>(
               value: FontSizeOption.values.firstWhere((e) => e.name == _config['fontSize']),
               decoration: const InputDecoration(labelText: '字体大小'),
@@ -86,6 +108,7 @@ class _CommonSettingState extends State<CommonSetting> {
                 });
               },
             ),
+            const SizedBox(height: 20), // Space before the button
             ElevatedButton(
               onPressed: _saveConfig,
               child: const Text('保存设置'),
