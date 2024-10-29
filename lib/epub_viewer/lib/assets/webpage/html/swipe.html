@@ -367,7 +367,19 @@
           + ')'
     }
 
-    
+    function clearSelections() {
+        const iframes = document.getElementsByTagName("iframe");
+        for (let i = 0; i < iframes.length; i++) {
+            const iframe = iframes[i];
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+            // 清除选中的内容
+            if (doc) {
+                const selection = doc.defaultView.getSelection();
+                selection.removeAllRanges(); // 清除所有选中的范围
+            }
+        }
+    }
   </script>
 
 </body>

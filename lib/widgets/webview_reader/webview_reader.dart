@@ -151,6 +151,7 @@ class _WebviewReaderState extends State<WebviewReader> {
         title: "查词",
         id: 1,
         action: () async {
+          epubController.clearSelections();
           _showWordLookupDialog(textSelection);
         },
       ),

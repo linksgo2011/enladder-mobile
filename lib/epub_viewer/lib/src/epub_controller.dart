@@ -196,6 +196,10 @@ class EpubController {
           "Epub viewer is not loaded, wait for onEpubLoaded callback");
     }
   }
+
+  clearSelections() {
+    webViewController?.evaluateJavascript(source: 'clearSelections()');
+  }
 }
 
 class LocalServerController {
