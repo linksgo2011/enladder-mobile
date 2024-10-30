@@ -1,3 +1,5 @@
+import 'package:enladder_mobile/screens/explore/customized_service_screen.dart';
+import 'package:enladder_mobile/screens/explore/guideline_screen.dart';
 import 'package:flutter/material.dart';
 import 'flash_words/flash_words_screen.dart'; // Import the FlashWords screen
 
@@ -15,14 +17,14 @@ class ExploreScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildExploreButton(context, '闪记单词', FlashWordsScreen()),
+            // const SizedBox(height: 20),
+            // _buildExploreButton(context, '短文阅读', null), // Replace with actual screen
+            // const SizedBox(height: 20),
+            // _buildExploreButton(context, '图背单词', null), // Replace with actual screen
             const SizedBox(height: 20),
-            _buildExploreButton(context, '短文阅读', null), // Replace with actual screen
+            _buildExploreButton(context, '学习攻略', GuidelineScreen()), // Replace with actual screen
             const SizedBox(height: 20),
-            _buildExploreButton(context, '图背单词', null), // Replace with actual screen
-            const SizedBox(height: 20),
-            _buildExploreButton(context, '网页阅读', null), // Replace with actual screen
-            const SizedBox(height: 20),
-            _buildExploreButton(context, '定制电子书', null), // Replace with actual screen
+            _buildExploreButton(context, '定制电子书', CustomizedServiceScreen()), // Replace with actual screen
           ],
         ),
       ),
