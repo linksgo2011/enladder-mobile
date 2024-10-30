@@ -121,7 +121,7 @@ class _FlashWordsScreenState extends State<FlashWordsScreen> with SingleTickerPr
         final wordBook = wordBooks[index];
         return ListTile(
           title: Text(wordBook.title),
-          subtitle: Text("作者：${wordBook.title}"),
+          subtitle: Text("作者：${wordBook.author),
           onTap: () {
             showDialog(
               context: context,
