@@ -1,19 +1,19 @@
 import 'dart:async';
 
 import 'package:enladder_mobile/constants.dart';
+import 'package:enladder_mobile/models/word_book.dart';
 import 'package:enladder_mobile/services/tts_service.dart';
+import 'package:enladder_mobile/services/words_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class FlashWordsDialog extends StatefulWidget {
-  final String wordsUrl;
-  final String? bookTitle;
+  final WordBook wordBook;
 
   const FlashWordsDialog({
     Key? key,
-    required this.wordsUrl,
-    this.bookTitle,
+    required this.wordBook,
   }) : super(key: key);
 
   @override
@@ -22,18 +22,29 @@ class FlashWordsDialog extends StatefulWidget {
 
 class _FlashWordsDialogState extends State<FlashWordsDialog> {
   final ttsService = TtsService();
+  final wordsService = WordsService();
   List<Map<String, dynamic>> flashcards = [];
   int currentIndex = 0;
   int currentStage = 0; // 0: 单词, 1: 释义, 2: 朗读
   bool isPaused = false;
-  int switchSpeed = 2000; // 切换速度，默认2000毫秒
+  int switchSpeed = 3000; // 切换速度，默认2000毫秒
   Timer? _timer; // Add a Timer reference
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _fetchWords().then((_) => startFlashCards());
+    var loadProgress = wordsService.loadProgress(widget.wordBook.id);
+    Future.wait([
+      loadProgress,
+      _fetchWords(),
+    ]).then((_) {
+      setState(() {
+        print(_);
+        currentIndex = _[0] as int;
+      });
+      startFlashCards();
+    });
   }
 
   @override
@@ -49,11 +60,16 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
         _nextFlashcard();
       }
     });
+    //触发一次滚动
+    Future.delayed(Duration(seconds: 1), () {
+      _scrollToCurrentIndex();
+    });
   }
 
   Future<void> _fetchWords() async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl${widget.wordsUrl}"));
+      final response =
+          await http.get(Uri.parse("$baseUrl${widget.wordBook.wordsUrl}"));
 
       if (response.statusCode == 200) {
         final decodedResponse = utf8.decode(response.bodyBytes);
@@ -119,10 +135,11 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
           return await _showCloseConfirmationDialog();
         },
         child: AlertDialog(
-          title: Text('闪卡: ${widget.bookTitle ?? ''}'),
+          title: Text('闪卡: ${widget.wordBook.title ?? ''}'),
           actions: [
             TextButton(
               onPressed: () async {
+                wordsService.saveProgress(widget.wordBook.id, currentIndex);
                 bool shouldClose = await _showCloseConfirmationDialog();
                 if (shouldClose) {
                   Navigator.of(context).pop();
@@ -178,11 +195,9 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
                       }
                     },
                     items: const [
-                      DropdownMenuItem(value: 1000, child: Text('1 秒')),
-                      DropdownMenuItem(value: 2000, child: Text('2 秒')),
                       DropdownMenuItem(value: 3000, child: Text('3 秒')),
                       DropdownMenuItem(value: 4000, child: Text('4 秒')),
-                      DropdownMenuItem(value: 5000, child: Text('5 秒')),
+                      DropdownMenuItem(value: 5000, child: Text('5 秒'))
                     ],
                   ),
                 ),
@@ -211,6 +226,7 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
                         return GestureDetector(
                           onTap: () {
                             setState(() {
+                              isPaused = true; // pause timer
                               currentIndex = index;
                               currentStage = 0; // Reset to the word stage
                             });
@@ -265,10 +281,11 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
               actions: [
                 TextButton(
                   onPressed: () {
+                    // 存储进度
                     Navigator.of(context).pop(false); // Return false
                   },
                   child: Text('取消'),
-                ),
+                ), 
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop(true); // Return true

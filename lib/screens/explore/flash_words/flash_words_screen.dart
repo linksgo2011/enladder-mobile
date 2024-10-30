@@ -126,7 +126,7 @@ class _FlashWordsScreenState extends State<FlashWordsScreen> with SingleTickerPr
             showDialog(
               context: context,
               builder: (BuildContext context) {
-                return FlashWordsDialog( wordsUrl: wordBook.wordsUrl, bookTitle: wordBook.title);
+                return FlashWordsDialog( wordBook:wordBook);
               },
             );
           },
