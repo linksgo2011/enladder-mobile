@@ -67,9 +67,8 @@ class _FlashWordsScreenState extends State<FlashWordsScreen> with SingleTickerPr
 
   Future<void> _loadBookWordBooks() async {
     // Replace with your wordsUrl
-    final wordsUrl = wordBooksUrl;
     try {
-      final response = await http.get(Uri.parse(wordsUrl));
+      final response = await http.get(Uri.parse(wordBooksUrl));
       if (response.statusCode == 200) {
         setState(() {
           _bookWordBooks = (jsonDecode(response.body) as List)

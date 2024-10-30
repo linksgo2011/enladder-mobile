@@ -59,9 +59,12 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
         final decodedResponse = utf8.decode(response.bodyBytes);
         final data = jsonDecode(decodedResponse);
         setState(() {
-          flashcards = data is List
-              ? data.cast<Map<String, dynamic>>()
-              : data.values.toList();
+          if (data is Map<String, dynamic>) {
+            flashcards =
+                data.values.map((e) => Map<String, dynamic>.from(e)).toList();
+          } else {
+            flashcards = data.cast<Map<String, dynamic>>();
+          }
         });
       } else {
         throw Exception('Failed to load words');
@@ -90,9 +93,9 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
 
   void _scrollToCurrentIndex() {
     // Calculate the offset to center the current word
-    double offset = (currentIndex * 100.0) -
-        (MediaQuery.of(context).size.width / 2) +
-        250.0;
+    double offset =
+        (currentIndex * 108.0) - (MediaQuery.of(context).size.width / 2) + 50;
+
     _scrollController.animateTo(
       offset.clamp(0.0, _scrollController.position.maxScrollExtent),
       duration: Duration(milliseconds: 300),
@@ -111,134 +114,171 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
     final phonetic = flashcards[currentIndex]['phonetic'] ?? '';
     final mnemonic = flashcards[currentIndex]['mnemonic'] ?? '';
 
-    return AlertDialog(
-      title: Text('闪卡: ${widget.bookTitle ?? ''}'),
-      actions: [
-        TextButton(
-          onPressed: () {
-            // TODO 增加确认
-            Navigator.of(context).pop();
-          },
-          child: Text('关闭'),
-        ),
-      ],
-      content: Column(
-        children: [
-          SizedBox(
-            height: 120,
-            child: Column(
-              children: [
-                if (currentStage == 0)
-                  Text(word, style: Theme.of(context).textTheme.titleSmall),
-                if (currentStage == 1)
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: '$word $phonetic\n'),
-                        TextSpan(text: '$definition\n'),
-                        if (mnemonic.isNotEmpty)
-                          TextSpan(text: '助记: $mnemonic'),
-                      ],
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                if (currentStage == 2)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.volume_up),
-                      Text('正在朗读: $word'),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-          // 设置区
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: DropdownButton<int>(
-              value: switchSpeed,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    switchSpeed = value;
-                  });
+    return WillPopScope(
+        onWillPop: () async {
+          return await _showCloseConfirmationDialog();
+        },
+        child: AlertDialog(
+          title: Text('闪卡: ${widget.bookTitle ?? ''}'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                bool shouldClose = await _showCloseConfirmationDialog();
+                if (shouldClose) {
+                  Navigator.of(context).pop();
                 }
               },
-              items: const [
-                DropdownMenuItem(value: 1000, child: Text('1 秒')),
-                DropdownMenuItem(value: 2000, child: Text('2 秒')),
-                DropdownMenuItem(value: 3000, child: Text('3 秒')),
-                DropdownMenuItem(value: 4000, child: Text('4 秒')),
-                DropdownMenuItem(value: 5000, child: Text('5 秒')),
+              child: Text('关闭'),
+            ),
+          ],
+          content: SizedBox(
+            height: 320,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 100,
+                  child: Column(
+                    children: [
+                      if (currentStage == 0)
+                        Text(word,
+                            style: Theme.of(context).textTheme.titleSmall),
+                      if (currentStage == 1)
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(text: '$word $phonetic\n'),
+                              TextSpan(text: '$definition\n'),
+                              if (mnemonic.isNotEmpty)
+                                TextSpan(text: '助记: $mnemonic'),
+                            ],
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      if (currentStage == 2)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.volume_up),
+                            Text('正在朗读: $word'),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+                // 设置区
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: DropdownButton<int>(
+                    value: switchSpeed,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          switchSpeed = value;
+                        });
+                      }
+                    },
+                    items: const [
+                      DropdownMenuItem(value: 1000, child: Text('1 秒')),
+                      DropdownMenuItem(value: 2000, child: Text('2 秒')),
+                      DropdownMenuItem(value: 3000, child: Text('3 秒')),
+                      DropdownMenuItem(value: 4000, child: Text('4 秒')),
+                      DropdownMenuItem(value: 5000, child: Text('5 秒')),
+                    ],
+                  ),
+                ),
+                // 操作区
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        isPaused = !isPaused;
+                      });
+                    },
+                    child: Text(isPaused ? '继续' : '暂停'),
+                  ),
+                ),
+                // 单词进度
+                SizedBox(
+                  width: double.infinity, // Full width of the parent
+                  height: 50.0, // Fixed height for the scrolling area
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: flashcards.map((flashcard) {
+                        int index = flashcards.indexOf(flashcard);
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              currentIndex = index;
+                              currentStage = 0; // Reset to the word stage
+                            });
+                            _scrollToCurrentIndex();
+                          },
+                          child: Container(
+                            width: 100.0, // Fixed width for each item
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                            decoration: BoxDecoration(
+                              color: index == currentIndex
+                                  ? Colors.blueAccent
+                                  : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Text(
+                              flashcard['word'],
+                              style: TextStyle(
+                                color: index == currentIndex
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    '当前 ${currentIndex + 1} / 总数 ${flashcards.length}',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          // 操作区
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  isPaused = !isPaused;
-                });
-              },
-              child: Text(isPaused ? '继续' : '暂停'),
-            ),
-          ),
-          // 单词进度
-          SizedBox(
-            width: double.infinity, // Full width of the parent
-            height: 50.0, // Fixed height for the scrolling area
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: flashcards.map((flashcard) {
-                  int index = flashcards.indexOf(flashcard);
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        currentIndex = index;
-                        currentStage = 0; // Reset to the word stage
-                      });
-                      _scrollToCurrentIndex();
-                    },
-                    child: Container(
-                      width: 100.0, // Fixed width for each item
-                      alignment: Alignment.center,
-                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                      decoration: BoxDecoration(
-                        color: index == currentIndex
-                            ? Colors.blueAccent
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Text(
-                        flashcard['word'],
-                        style: TextStyle(
-                          color: index == currentIndex
-                              ? Colors.white
-                              : Colors.black,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          Center(
-            child: Text(
-              '当前 ${currentIndex + 1} / 总数 ${flashcards.length}',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+        ));
+  }
+
+  Future<bool> _showCloseConfirmationDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('确认关闭'),
+              content: Text('您确定要关闭吗？'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // Return false
+                  },
+                  child: Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Return true
+                  },
+                  child: Text('确认'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Return false if dialog is dismissed
   }
 }
