@@ -1,3 +1,4 @@
+import 'package:enladder_mobile/screens/explore/article_list_screen.dart';
 import 'package:enladder_mobile/screens/explore/customized_service_screen.dart';
 import 'package:enladder_mobile/screens/explore/guideline_screen.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +18,8 @@ class ExploreScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildExploreButton(context, '闪记单词', FlashWordsScreen()),
-            // const SizedBox(height: 20),
-            // _buildExploreButton(context, '短文阅读', null), // Replace with actual screen
+            const SizedBox(height: 20),
+            _buildExploreButton(context, '短文阅读', ArticleListScreen()), // Replace with actual screen
             // const SizedBox(height: 20),
             // _buildExploreButton(context, '图背单词', null), // Replace with actual screen
             const SizedBox(height: 20),
