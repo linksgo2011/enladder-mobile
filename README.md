@@ -24,7 +24,22 @@
 - 清理书架 ✅
 - 上下文菜单：查单词 ✅
 - 阅读器查单词 ✅
-- 攻略中心：内嵌小红书的学习经验 Doing 
+- 攻略中心：内嵌小红书的学习经验 ✅ 
 - 文章梯子
 - 登录和个人中心
-- 下载进度提示优化
+
+
+## Bugs
+
+- 下载进度提示优化 ✅
+- 5000 单词清单错误
+
+## Debug 
+
+> flutter pub get 
+> flutter run 
+
+## Release 
+
+> flutter clean
+> flutter build apk --release --no-tree-shake-icons

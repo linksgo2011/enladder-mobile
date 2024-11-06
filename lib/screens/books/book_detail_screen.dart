@@ -1,4 +1,5 @@
 import 'package:enladder_mobile/models/book.dart';
+import 'package:enladder_mobile/widgets/loading_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:vocsy_epub_viewer/epub_viewer.dart';
 import 'package:path_provider/path_provider.dart';
@@ -169,13 +170,16 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
             ElevatedButton(
               onPressed: () async {
                 try {
+                  LoadingDialog.show(context);
                   await _bookService.downloadBook('$epubBaseUrl${widget.book.epubUrl}', widget.book.title);
                   await _bookService.addBookToBookshelf(widget.book);
+                  LoadingDialog.hide(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('书籍已添加到书架并下载成功')),
                   );
                   _checkBookInBookshelf(); // 刷新书架状态
                 } catch (e) {
+                  LoadingDialog.hide(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('下载失败: $e')),
                   );
@@ -188,9 +192,12 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   try {
+                    LoadingDialog.show(context);
                     await _bookService.downloadBook('$epubBaseUrl${widget.book.epubUrl}', widget.book.title);
                     Navigator.push(context, MaterialPageRoute(builder: (context) => BookReaderScreen(book: widget.book)));
+                    LoadingDialog.hide(context);
                   } catch (e) {
+                    LoadingDialog.hide(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('下载失败: $e')),
                     );

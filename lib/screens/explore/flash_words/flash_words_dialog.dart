@@ -160,6 +160,14 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
                         Text(word,
                             style: Theme.of(context).textTheme.titleSmall),
                       if (currentStage == 1)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.volume_up),
+                            Text('正在朗读: $word'),
+                          ],
+                        ),
+                      if (currentStage == 2)
                         Text.rich(
                           TextSpan(
                             children: [
@@ -170,14 +178,6 @@ class _FlashWordsDialogState extends State<FlashWordsDialog> {
                             ],
                           ),
                           textAlign: TextAlign.left,
-                        ),
-                      if (currentStage == 2)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.volume_up),
-                            Text('正在朗读: $word'),
-                          ],
                         ),
                     ],
                   ),
